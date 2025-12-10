@@ -48,12 +48,12 @@ frontend/
 
 ## Technologies Used
 
-### HTML5
+### HTML
 - Semantic markup
 - Form elements
 - Accessible structure
 
-### CSS3
+### CSS
 - CSS Grid for gallery layout
 - Flexbox for layout alignment
 - Media queries for responsive design
