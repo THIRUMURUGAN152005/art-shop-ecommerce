@@ -60,7 +60,7 @@ frontend/
 - CSS transitions for smooth interactions
 - CSS variables for consistent styling
 
-### JavaScript (ES6+)
+### JavaScript 
 - Fetch API for HTTP requests
 - DOM manipulation
 - Event listeners
