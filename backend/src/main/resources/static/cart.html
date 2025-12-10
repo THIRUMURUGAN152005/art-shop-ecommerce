@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Art Shop</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        // Check if user is logged in
+        const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🎨 Art Shop</div>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="cart.html" style="font-weight: bold;">Cart (<span id="cart-count">0</span>)</a></li>
+                <li><a href="checkout.html">My Orders</a></li>
+                <li><span id="user-role-badge" style="padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 10px;"></span></li>
+                <li><span id="user-name" style="color: white; margin-left: 10px;"></span></li>
+                <li><button onclick="logout()" class="btn btn-secondary" style="padding: 8px 20px; margin-left: 10px;">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Cart Items Section -->
+    <section class="cart-section" style="padding: 50px 0;">
+        <div class="container" style="max-width: 900px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 30px;">🛒 Shopping Cart</h2>
+            
+            <!-- Cart Items Display -->
+            <div id="cart-items-display" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                <p style="text-align: center; color: #7f8c8d;">Your cart is empty. Add items from the gallery!</p>
+            </div>
+
+            <!-- Cart Summary -->
+            <div id="cart-summary" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: none;">
+                <h3 style="margin-bottom: 15px;">Order Summary</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Total Items:</span>
+                    <strong><span id="summary-items">0</span></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 1.3rem; color: #667eea; font-weight: bold; border-top: 2px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                    <span>Total Amount:</span>
+                    <span>$<span id="summary-total">0.00</span></span>
+                </div>
+            </div>
+
+            <!-- Order Form -->
+            <div id="order-form-section" style="display: none;">
+                <h3 style="text-align: center; margin-bottom: 20px;">Complete Your Order</h3>
+                <form id="checkout-form" class="checkout-form" style="background: white; padding: 30px; border-radius: 8px;">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="postalCode">Postal Code</label>
+                        <input type="text" id="postalCode" name="postalCode" required>
+                    </div>
+                    
+                    <button type="button" id="rzp-button" class="btn btn-primary" style="width: 100%; background: #528FF0; font-size: 1.1rem; padding: 15px;">
+                        💳 Pay $<span id="form-total">0.00</span> with Razorpay
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script src="assets/js/main.js?v=8"></script>
+    <script>
+        // Display cart items with images
+        function displayCartItems() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartDisplay = document.getElementById('cart-items-display');
+            const cartSummary = document.getElementById('cart-summary');
+            const orderFormSection = document.getElementById('order-form-section');
+            const summaryItems = document.getElementById('summary-items');
+            const summaryTotal = document.getElementById('summary-total');
+            const formTotal = document.getElementById('form-total');
+            
+            if (cart.length === 0) {
+                cartDisplay.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 40px;">Your cart is empty. <a href="gallery.html" style="color: #667eea;">Browse Gallery</a></p>';
+                cartSummary.style.display = 'none';
+                orderFormSection.style.display = 'none';
+                return;
+            }
+            
+            // Calculate totals
+            let totalItems = 0;
+            let totalAmount = 0;
+            
+            // Display cart items
+            let html = '<div style="display: grid; gap: 15px;">';
+            cart.forEach(item => {
+                totalItems += item.quantity;
+                totalAmount += item.price * item.quantity;
+                
+                html += `
+                    <div style="display: flex; gap: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; align-items: center;">
+                        <div style="flex-shrink: 0;">
+                            <div style="width: 80px; height: 80px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                                🎨
+                            </div>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin: 0 0 5px 0;">${item.title}</h4>
+                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">$${item.price.toFixed(2)} each</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})" class="btn" style="padding: 5px 10px;">-</button>
+                            <span style="font-weight: bold; min-width: 30px; text-align: center;">${item.quantity}</span>
+                            <button onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})" class="btn" style="padding: 5px 10px;">+</button>
+                        </div>
+                        <div style="min-width: 80px; text-align: right;">
+                            <strong style="font-size: 1.1rem;">$${(item.price * item.quantity).toFixed(2)}</strong>
+                        </div>
+                        <button onclick="removeFromCartPage('${item.id}')" class="btn btn-danger" style="padding: 8px 15px;">Remove</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            cartDisplay.innerHTML = html;
+            summaryItems.textContent = totalItems;
+            summaryTotal.textContent = totalAmount.toFixed(2);
+            formTotal.textContent = totalAmount.toFixed(2);
+            
+            cartSummary.style.display = 'block';
+            orderFormSection.style.display = 'block';
+        }
+        
+        // Update quantity
+        function updateCartQuantity(id, newQuantity) {
+            if (newQuantity < 1) return;
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.quantity = newQuantity;
+                localStorage.setItem('cart', JSON.stringify(cart));
+                displayCartItems();
+                updateCartCount();
+            }
+        }
+        
+        // Remove from cart
+        function removeFromCartPage(id) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart = cart.filter(item => item.id !== id);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayCartItems();
+            updateCartCount();
+        }
+        
+        // Auto-fill user details
+        window.addEventListener('DOMContentLoaded', () => {
+            displayCartItems();
+            
+            const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user'));
+            if (user) {
+                const emailField = document.getElementById('email');
+                const nameField = document.getElementById('fullName');
+                if (emailField) emailField.value = user.email;
+                if (nameField) nameField.value = user.firstName + ' ' + user.lastName;
+            }
+            
+            // Setup Razorpay payment button
+            setupRazorpayPayment();
+        });
+        
+        // Razorpay Payment Integration
+        function setupRazorpayPayment() {
+            const rzpButton = document.getElementById('rzp-button');
+            if (!rzpButton) return;
+            
+            rzpButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validate form fields
+                const fullName = document.getElementById('fullName').value;
+                const email = document.getElementById('email').value;
+                const address = document.getElementById('address').value;
+                const city = document.getElementById('city').value;
+                const postalCode = document.getElementById('postalCode').value;
+                
+                if (!fullName || !email || !address || !city || !postalCode) {
+                    alert('Please fill in all required fields before proceeding to payment.');
+                    return;
+                }
+                
+                // Get cart and calculate total
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                if (cart.length === 0) {
+                    alert('Your cart is empty!');
+                    return;
+                }
+                
+                let totalAmount = 0;
+                cart.forEach(item => {
+                    totalAmount += item.price * item.quantity;
+                });
+                
+                // Convert to paise (Razorpay uses smallest currency unit)
+                const amountInPaise = Math.round(totalAmount * 100);
+                
+                // Razorpay options
+                const options = {
+                    key: 'rzp_test_RbJGciJT7ShcMq', // Your Razorpay Key ID
+                    amount: amountInPaise, // Amount in paise
+                    currency: 'INR',
+                    name: 'Art Shop',
+                    description: 'Artwork Purchase',
+                    image: 'https://via.placeholder.com/100x100?text=🎨',
+                    handler: function(response) {
+                        // Payment successful
+                        handlePaymentSuccess(response, {
+                            fullName,
+                            email,
+                            address,
+                            city,
+                            postalCode,
+                            cart,
+                            totalAmount
+                        });
+                    },
+                    prefill: {
+                        name: fullName,
+                        email: email,
+                        contact: ''
+                    },
+                    notes: {
+                        address: address + ', ' + city + ', ' + postalCode
+                    },
+                    theme: {
+                        color: '#667eea'
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            console.log('Payment cancelled by user');
+                        }
+                    }
+                };
+                
+                const rzp = new Razorpay(options);
+                rzp.open();
+            });
+        }
+        
+        // Handle successful payment
+        async function handlePaymentSuccess(paymentResponse, orderData) {
+            try {
+                // Create order object
+                const order = {
+                    fullName: orderData.fullName,
+                    email: orderData.email,
+                    address: orderData.address,
+                    city: orderData.city,
+                    postalCode: orderData.postalCode,
+                    cardNumber: 'Razorpay: ' + paymentResponse.razorpay_payment_id,
+                    items: orderData.cart,
+                    totalAmount: orderData.totalAmount,
+                    status: 'PAID',
+                    createdAt: Date.now()
+                };
+                
+                // Submit order to backend
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(order)
+                });
+                
+                if (response.ok) {
+                    const savedOrder = await response.json();
+                    
+                    // Clear cart
+                    localStorage.removeItem('cart');
+                    updateCartCount();
+                    
+                    // Show success message
+                    alert('Payment Successful! ✅\n\nPayment ID: ' + paymentResponse.razorpay_payment_id + '\nOrder ID: ' + savedOrder.id);
+                    
+                    // Redirect to order confirmation
+                    window.location.href = 'order-confirmation.html?orderId=' + savedOrder.id;
+                } else {
+                    throw new Error('Failed to create order');
+                }
+            } catch (error) {
+                console.error('Error processing order:', error);
+                alert('Payment was successful but there was an error saving your order. Please contact support with Payment ID: ' + paymentResponse.razorpay_payment_id);
+            }
+        }
+    </script>
+</body>
+</html>
+
+    <script>
+        // Update navigation with user info
+        (function() {
+            const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const userName = document.getElementById('user-name');
+                const userRoleBadge = document.getElementById('user-role-badge');
+                const navMenu = document.getElementById('nav-menu');
+                
+                if (userName) userName.textContent = `Welcome, ${user.firstName}!`;
+                
+                // Display user role badge
+                if (userRoleBadge) {
+                    if (user.role === 'ARTIST') {
+                        userRoleBadge.textContent = 'Artist';
+                        userRoleBadge.style.background = '#27ae60';
+                        userRoleBadge.style.color = 'white';
+                        
+                        // Add Dashboard link for artists
+                        if (navMenu) {
+                            const dashboardLi = document.createElement('li');
+                            dashboardLi.innerHTML = '<a href="artist-dashboard.html">Dashboard</a>';
+                            navMenu.insertBefore(dashboardLi, navMenu.children[3]);
+                        }
+                    } else {
+                        userRoleBadge.textContent = 'Customer';
+                        userRoleBadge.style.background = '#3498db';
+                        userRoleBadge.style.color = 'white';
+                    }
+                }
+            }
+        })();
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Art Shop</h3>
+                <p>Art Shop is your premier destination for discovering and purchasing unique artworks from talented artists around the world. We connect art lovers with exceptional pieces that inspire and transform spaces.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook">📘</a>
+                    <a href="#" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="YouTube">📺</a>
+                    <a href="#" aria-label="Instagram">📷</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p><strong>Art Shop Gallery</strong><br>
+                Email: <a href="mailto:info@artshop.com">info@artshop.com</a><br>
+                Phone: <a href="tel:+1-555-ART-SHOP">+1 (555) ART-SHOP</a><br>
+                Support: <a href="mailto:support@artshop.com">support@artshop.com</a></p>
+                <h3 style="margin-top: 20px;">Quick Links</h3>
+                <p>
+                    <a href="gallery.html">Gallery</a> | 
+                    <a href="cart.html">Cart</a> | 
+                    <a href="artist-dashboard.html">Artist Portal</a>
+                </p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Art Shop. All rights reserved. | Empowering Artists, Inspiring Collectors</p>
+        </div>
+    </footer>
+</body>
+</html>

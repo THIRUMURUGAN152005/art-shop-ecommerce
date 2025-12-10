@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Login - Art Shop</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>🎨 Art Shop</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="login.html">Customer Login</a></li>
+                <li><a href="artist-signup.html">Artist Signup</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h2>🎨 Artist Login</h2>
+                <p>Access your artist dashboard</p>
+            </div>
+
+            <form id="artistLoginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember">
+                        <span>Remember me</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-auth">Login as Artist</button>
+
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="artist-signup.html">Sign Up as Artist</a></p>
+                    <p>Are you a customer? <a href="login.html">Customer Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js?v=6"></script>
+    <script>
+        const artistLoginForm = document.getElementById('artistLoginForm');
+        if (artistLoginForm) {
+            artistLoginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const remember = document.getElementById('remember').checked;
+                
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Check if user is actually an artist
+                        if (data.user.role !== 'ARTIST') {
+                            alert('This account is not registered as an artist. Please use customer login.');
+                            return;
+                        }
+                        
+                        alert('Login successful! Redirecting to dashboard...');
+                        
+                        const storage = remember ? localStorage : sessionStorage;
+                        storage.setItem('user', JSON.stringify(data.user));
+                        storage.setItem('userId', data.user.id);
+                        storage.setItem('userEmail', data.user.email);
+                        storage.setItem('userName', data.user.firstName + ' ' + data.user.lastName);
+                        
+                        setTimeout(() => {
+                            window.location.href = 'artist-dashboard.html';
+                        }, 1000);
+                    } else {
+                        alert(data.message || 'Login failed!');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+        
+        // Pre-fill email if coming from signup
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedEmail = localStorage.getItem('userEmail');
+            if (savedEmail) {
+                document.getElementById('email').value = savedEmail;
+            }
+        });
+    </script>
+</body>
+</html>

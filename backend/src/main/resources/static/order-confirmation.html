@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - Art Shop</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .confirmation-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .success-icon {
+            text-align: center;
+            font-size: 80px;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+        .order-details {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .order-total {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 20px;
+            text-align: right;
+        }
+    </style>
+    <script>
+        // Check if user is logged in
+        const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🎨 Art Shop</div>
+            <ul class="nav-menu">
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="cart.html">Cart (<span id="cart-count">0</span>)</a></li>
+                <li><button onclick="logout()" class="btn btn-secondary" style="padding: 8px 20px; margin-left: 10px;">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="confirmation-container">
+        <div class="success-icon">✅</div>
+        <h1 style="text-align: center; color: #2c3e50;">Order Placed Successfully!</h1>
+        <p style="text-align: center; color: #7f8c8d; font-size: 18px;">Thank you for your purchase</p>
+        
+        <div class="order-details">
+            <h2>Order Details</h2>
+            <p><strong>Order ID:</strong> <span id="order-id"></span></p>
+            <p><strong>Customer:</strong> <span id="customer-name"></span></p>
+            <p><strong>Email:</strong> <span id="customer-email"></span></p>
+            <p><strong>Delivery Address:</strong> <span id="delivery-address"></span></p>
+            
+            <h3 style="margin-top: 30px;">Items Ordered:</h3>
+            <div id="order-items"></div>
+            
+            <div class="order-total">
+                Total: $<span id="order-total">0.00</span>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="gallery.html" class="btn btn-primary">Continue Shopping</a>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        // Display order details from localStorage
+        window.addEventListener('DOMContentLoaded', () => {
+            const orderData = JSON.parse(localStorage.getItem('lastOrder') || '{}');
+            
+            if (orderData.id) {
+                document.getElementById('order-id').textContent = orderData.id;
+                document.getElementById('customer-name').textContent = orderData.fullName;
+                document.getElementById('customer-email').textContent = orderData.email;
+                document.getElementById('delivery-address').textContent = 
+                    `${orderData.address}, ${orderData.city}, ${orderData.postalCode}`;
+                
+                // Display items
+                const itemsContainer = document.getElementById('order-items');
+                itemsContainer.innerHTML = '';
+                orderData.items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'order-item';
+                    itemDiv.innerHTML = `
+                        <span>${item.title} x ${item.quantity}</span>
+                        <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                    `;
+                    itemsContainer.appendChild(itemDiv);
+                });
+                
+                document.getElementById('order-total').textContent = orderData.totalAmount.toFixed(2);
+            } else {
+                window.location.href = 'gallery.html';
+            }
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Art Shop</h3>
+                <p>Art Shop is your premier destination for discovering and purchasing unique artworks from talented artists around the world. We connect art lovers with exceptional pieces that inspire and transform spaces.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook">📘</a>
+                    <a href="#" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="YouTube">📺</a>
+                    <a href="#" aria-label="Instagram">📷</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p><strong>Art Shop Gallery</strong><br>
+                Email: <a href="mailto:info@artshop.com">info@artshop.com</a><br>
+                Phone: <a href="tel:+1-555-ART-SHOP">+1 (555) ART-SHOP</a><br>
+                Support: <a href="mailto:support@artshop.com">support@artshop.com</a></p>
+                <h3 style="margin-top: 20px;">Quick Links</h3>
+                <p>
+                    <a href="gallery.html">Gallery</a> | 
+                    <a href="cart.html">Cart</a> | 
+                    <a href="artist-dashboard.html">Artist Portal</a>
+                </p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Art Shop. All rights reserved. | Empowering Artists, Inspiring Collectors</p>
+        </div>
+    </footer>
+</body>
+</html>

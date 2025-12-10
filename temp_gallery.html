@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Gallery - Art Shop</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script>
+        // Check if user is logged in
+        const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">ð¨ Art Shop</div>
+            <ul class="nav-menu">
+                <li><a href="gallery.html" style="font-weight: bold;">Gallery</a></li>
+                <li><a href="cart.html">Place Order</a></li>
+                <li><a href="checkout.html">My Orders</a></li>
+                <li><button onclick="logout()" class="btn btn-secondary" style="padding: 8px 20px; margin-left: 10px;">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Art Gallery</h1>
+            <p>Discover and purchase unique artworks from talented artists</p>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery-section">
+        <div class="container">
+            <h2>Featured Artworks</h2>
+            <div id="artworks-container" class="artworks-grid">
+                <p>Loading artworks...</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="assets/js/main.js?v=4"></script>
+</body>
+</html>
+

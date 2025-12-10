@@ -1,0 +1,62 @@
+========================================
+  ART SHOP - RUN COMMANDS
+========================================
+
+EVERY TIME YOU WANT TO RUN WITH PERMANENT STORAGE:
+
+Step 1: Start MongoDB Compass
+------------------------------
+- Just open MongoDB Compass application
+- It will automatically start MongoDB server
+- Keep it running in background
+
+OR if you have MongoDB installed:
+- Open Command Prompt as Administrator
+- Run: net start MongoDB
+
+
+Step 2: Start Spring Boot Application
+--------------------------------------
+Open Command Prompt (regular) and run:
+
+cd C:\ecommerceweb\backend
+mvn spring-boot:run
+
+
+Step 3: Open in Browser
+------------------------
+http://localhost:8080
+
+
+========================================
+LOGIN CREDENTIALS
+========================================
+
+Customer:
+Email: john@example.com
+Password: password123
+
+Artist:
+Email: vincent@artshop.com
+Password: password123
+
+
+========================================
+TEST RAZORPAY PAYMENT
+========================================
+
+Card: 4111 1111 1111 1111
+CVV: 123
+Expiry: 12/25
+
+
+========================================
+SUMMARY
+========================================
+
+1. Start MongoDB Compass (or: net start MongoDB)
+2. cd C:\ecommerceweb\backend
+3. mvn spring-boot:run
+4. Open: http://localhost:8080
+
+ALL DATA IS PERMANENT! ✅

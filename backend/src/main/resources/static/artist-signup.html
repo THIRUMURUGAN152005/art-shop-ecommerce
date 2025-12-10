@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Signup - Art Shop</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>🎨 Art Shop</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="login.html">Customer Login</a></li>
+                <li><a href="artist-login.html">Artist Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h2>🎨 Join as an Artist</h2>
+                <p>Start selling your artwork today</p>
+            </div>
+
+            <form id="artistSignupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Artist Bio (Optional)</label>
+                    <textarea id="bio" name="bio" placeholder="Tell us about yourself and your art" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Create a password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+
+                <button type="submit" class="btn-auth">Sign Up as Artist</button>
+
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="artist-login.html">Login</a></p>
+                    <p>Want to buy art? <a href="signup.html">Sign up as Customer</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js?v=6"></script>
+    <script>
+        const artistSignupForm = document.getElementById('artistSignupForm');
+        if (artistSignupForm) {
+            artistSignupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const email = document.getElementById('email').value;
+                const bio = document.getElementById('bio').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match!');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    alert('Password must be at least 6 characters!');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            firstName,
+                            lastName,
+                            email,
+                            password,
+                            role: 'ARTIST',
+                            bio: bio || ''
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        alert('Artist registration successful! Redirecting to login...');
+                        localStorage.setItem('userEmail', email);
+                        setTimeout(() => {
+                            window.location.href = 'artist-login.html';
+                        }, 1500);
+                    } else {
+                        alert(data.message || 'Registration failed!');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Gallery - Art Shop</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script>
+        // Check if user is logged in
+        const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">🎨 Art Shop</div>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="gallery.html" style="font-weight: bold;">Gallery</a></li>
+                <li><a href="cart.html">Cart (<span id="cart-count">0</span>)</a></li>
+                <li><a href="checkout.html">My Orders</a></li>
+                <!-- Dynamic menu items will be inserted here -->
+                <li><span id="user-role-badge" style="padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 10px;"></span></li>
+                <li><span id="user-name" style="color: white; margin-left: 10px;"></span></li>
+                <li><button onclick="logout()" class="btn btn-secondary" style="padding: 8px 20px; margin-left: 10px;">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>🎨 Art Gallery</h1>
+            <p>Discover and purchase unique artworks from talented artists</p>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery-section">
+        <div class="container">
+            <h2>Featured Artworks</h2>
+            
+            <!-- Category Filter Buttons -->
+            <div class="category-filters" style="text-align: center; margin-bottom: 30px;">
+                <button class="btn category-btn active" onclick="filterByCategory('all')" data-category="all">
+                    All Artworks
+                </button>
+                <button class="btn category-btn" onclick="filterByCategory('Abstract')" data-category="Abstract">
+                    Abstract
+                </button>
+                <button class="btn category-btn" onclick="filterByCategory('Portrait')" data-category="Portrait">
+                    Portrait
+                </button>
+                <button class="btn category-btn" onclick="filterByCategory('Landscape')" data-category="Landscape">
+                    Landscape
+                </button>
+                <button class="btn category-btn" onclick="filterByCategory('Modern')" data-category="Modern">
+                    Modern
+                </button>
+                <button class="btn category-btn" onclick="filterByCategory('Surrealism')" data-category="Surrealism">
+                    Surrealism
+                </button>
+                <button class="btn category-btn" onclick="filterByCategory('Other')" data-category="Other">
+                    Other
+                </button>
+            </div>
+            
+            <div id="artworks-container" class="artworks-grid">
+                <p>Loading artworks...</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="assets/js/main.js?v=9"></script>
+    <script>
+        let allArtworks = [];
+        let currentCategory = 'all';
+        
+        // Load artworks with category support
+        async function loadArtworksWithCategories() {
+            try {
+                const response = await fetch('/api/artworks');
+                if (!response.ok) throw new Error('Failed to fetch artworks');
+                
+                allArtworks = await response.json();
+                displayArtworksByCategory(currentCategory);
+            } catch (error) {
+                console.error('Error loading artworks:', error);
+                const container = document.getElementById('artworks-container');
+                if (container) {
+                    container.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 2rem;">Error loading artworks. Please try again later.</p>';
+                }
+            }
+        }
+        
+        // Filter artworks by category
+        function filterByCategory(category) {
+            currentCategory = category;
+            
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.category === category) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            displayArtworksByCategory(category);
+        }
+        
+        // Display artworks filtered by category
+        function displayArtworksByCategory(category) {
+            const container = document.getElementById('artworks-container');
+            if (!container) return;
+            
+            let filteredArtworks = allArtworks;
+            
+            if (category !== 'all') {
+                filteredArtworks = allArtworks.filter(artwork => {
+                    const artworkCategory = artwork.category || 'Other';
+                    return artworkCategory.toLowerCase() === category.toLowerCase() || 
+                           (category === 'Other' && (!artwork.category || artwork.category === 'Uncategorized'));
+                });
+            }
+            
+            container.innerHTML = '';
+            
+            if (filteredArtworks.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #7f8c8d; padding: 2rem; grid-column: 1/-1;">No artworks found in "${category}" category.</p>`;
+                return;
+            }
+            
+            filteredArtworks.forEach(artwork => {
+                const card = document.createElement('div');
+                card.className = 'artwork-card';
+                
+                let imageUrl = artwork.imageUrl;
+                if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                    imageUrl = '/' + imageUrl;
+                }
+                
+                const category = artwork.category || 'Uncategorized';
+                const description = artwork.description || 'No description available';
+                
+                card.innerHTML = `
+                    <div class="artwork-image-container">
+                        <img src="${imageUrl}" alt="${artwork.title}" class="artwork-image" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        <span class="artwork-category-badge">${category}</span>
+                    </div>
+                    <div class="artwork-details">
+                        <h3 class="artwork-title">${artwork.title}</h3>
+                        <p class="artwork-artist" style="color: #7f8c8d; font-size: 0.9rem; margin: 5px 0;">By ${artwork.artist || 'Unknown Artist'}</p>
+                        <p class="artwork-description" style="color: #555; font-size: 0.9rem; margin: 10px 0; line-height: 1.4;">${description}</p>
+                        <p class="artwork-price">$${artwork.price.toFixed(2)}</p>
+                        <button class="btn btn-primary" onclick="addToCart('${artwork.id}', '${artwork.title}', ${artwork.price})">
+                            Add to Cart
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Update navigation based on user role
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const userName = document.getElementById('user-name');
+                const userRoleBadge = document.getElementById('user-role-badge');
+                const navMenu = document.getElementById('nav-menu');
+                
+                // Display user name
+                userName.textContent = `Welcome, ${user.firstName}!`;
+                
+                // Display user role badge
+                if (user.role === 'ARTIST') {
+                    userRoleBadge.textContent = 'Artist';
+                    userRoleBadge.style.background = '#27ae60';
+                    userRoleBadge.style.color = 'white';
+                    
+                    // Add Dashboard link for artists
+                    const dashboardLi = document.createElement('li');
+                    dashboardLi.innerHTML = '<a href="artist-dashboard.html">Dashboard</a>';
+                    navMenu.insertBefore(dashboardLi, navMenu.children[3]);
+                } else {
+                    userRoleBadge.textContent = 'Customer';
+                    userRoleBadge.style.background = '#3498db';
+                    userRoleBadge.style.color = 'white';
+                }
+            }
+            
+            // Load artworks with category filtering
+            loadArtworksWithCategories();
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Art Shop</h3>
+                <p>Art Shop is your premier destination for discovering and purchasing unique artworks from talented artists around the world. We connect art lovers with exceptional pieces that inspire and transform spaces.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook">📘</a>
+                    <a href="#" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="YouTube">📺</a>
+                    <a href="#" aria-label="Instagram">📷</a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p><strong>Art Shop Gallery</strong><br>
+                Email: <a href="mailto:info@artshop.com">info@artshop.com</a><br>
+                Phone: <a href="tel:+1-555-ART-SHOP">+1 (555) ART-SHOP</a><br>
+                Support: <a href="mailto:support@artshop.com">support@artshop.com</a></p>
+                <h3 style="margin-top: 20px;">Quick Links</h3>
+                <p>
+                    <a href="gallery.html">Gallery</a> | 
+                    <a href="cart.html">Cart</a> | 
+                    <a href="artist-dashboard.html">Artist Portal</a>
+                </p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Art Shop. All rights reserved. | Empowering Artists, Inspiring Collectors</p>
+        </div>
+    </footer>
+</body>
+</html>
